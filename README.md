@@ -79,7 +79,7 @@
 
 ## 原始碼
 
-GitHub: [https://github.com/XingYanTW/StopTimer](https://github.com/XingYanTW/StopTimer)
+GitHub: [https://github.com/xydesu/StopTimer](https://github.com/xydesu/StopTimer)
 
 如有建議或問題歡迎開 Issue 或 PR！
 
