@@ -4,6 +4,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import me.xydesu.stoptimer.Utils.TimeUtil;
 
@@ -91,14 +92,14 @@ public class MessageManager {
         List<String> lines = langConfig.getStringList("messages.notify.message");
         return lines.stream()
                 .map(line -> color(line.replace("%time%", t)))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public List<String> getNotifyCancel() {
         List<String> lines = langConfig.getStringList("messages.notify.cancel");
         return lines.stream()
                 .map(this::color)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public String getKickMessage() {

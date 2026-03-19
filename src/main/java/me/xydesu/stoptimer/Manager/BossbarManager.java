@@ -1,7 +1,6 @@
 package me.xydesu.stoptimer.Manager;
 
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BossBar;
 
@@ -18,8 +17,7 @@ public class BossbarManager {
 
     //create a bossbar when the countdown starts
     public void createBossbar() {
-        NamespacedKey key = new NamespacedKey("stoptimer", "countdown");
-        bossbar = Bukkit.createBossBar(key, message.getBossbarMessage(manager.getTimeLeft()), BarColor.RED, org.bukkit.boss.BarStyle.SOLID);
+        bossbar = Bukkit.createBossBar(message.getBossbarMessage(manager.getTimeLeft()), BarColor.RED, org.bukkit.boss.BarStyle.SOLID);
         double progress = 1.0;
         if (manager.getTimeMax() > 0) {
             progress = Math.max(0.0, Math.min(1.0, (double) manager.getTimeLeft() / manager.getTimeMax()));
@@ -46,7 +44,8 @@ public class BossbarManager {
 
     public void removeBossbar() {
         if (bossbar != null) {
-            Bukkit.removeBossBar(new NamespacedKey("stoptimer", "countdown"));
+            bossbar.setVisible(false);
+            bossbar.removeAll();
             bossbar = null;
         }
     }

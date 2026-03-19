@@ -5,6 +5,7 @@ import me.xydesu.stoptimer.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -12,8 +13,24 @@ import java.util.List;
 
 public class Manager {
 
+    /** True when the server is running Folia (thread-per-region scheduler). */
+    private static final boolean FOLIA;
+
+    static {
+        boolean folia;
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            folia = true;
+        } catch (ClassNotFoundException e) {
+            folia = false;
+        }
+        FOLIA = folia;
+    }
+
     private final Plugin plugin;
-    private BukkitRunnable task;
+    private Runnable taskCancelAction;
+    private boolean tickFirstRun;
+    private long tickLastTimeLeft;
     private long endTimeMillis = -1;
     private long durationSeconds = -1;
     private final MessageManager message;
@@ -85,86 +102,152 @@ public class Manager {
         }
         durationSeconds = seconds;
         endTimeMillis = System.currentTimeMillis() + seconds * 1000;
+        tickFirstRun = true;
+        tickLastTimeLeft = -1;
 
         if (config.getBossbarEnabled()) {
             bossbarManager.createBossbar();
         }
 
-        boolean titleFirstRun = config.getTitleFirstRun();
-        boolean messageFirstRun = config.getMessageFirstRun();
-        boolean discordFirstRun = config.getDiscordFirstRun();
-        java.util.List<Integer> titleSeconds = config.getTitleSeconds();
-        java.util.List<Integer> messageSeconds = config.getMessageSeconds();
-        java.util.List<Integer> discordSeconds = config.getDiscordSeconds();
+        final boolean titleFirstRun = config.getTitleFirstRun();
+        final boolean messageFirstRun = config.getMessageFirstRun();
+        final boolean discordFirstRun = config.getDiscordFirstRun();
+        final List<Integer> titleSeconds = config.getTitleSeconds();
+        final List<Integer> messageSeconds = config.getMessageSeconds();
+        final List<Integer> discordSeconds = config.getDiscordSeconds();
 
-        task = new BukkitRunnable() {
-            boolean firstRun = true;
-            long lastTimeLeft = -1;
-
-            @Override
-            public void run() {
-                long timeLeft = getTimeLeft();
-
-                if (config.getBossbarEnabled()) {
-                    bossbarManager.updateBossbar();
-                    bossbarManager.showBossbar();
+        if (FOLIA) {
+            io.papermc.paper.threadedregions.scheduler.ScheduledTask foliaTask =
+                plugin.getServer().getGlobalRegionScheduler().runAtFixedRate(plugin, t ->
+                    tick(titleFirstRun, messageFirstRun, discordFirstRun,
+                         titleSeconds, messageSeconds, discordSeconds),
+                    1L, 1L);
+            taskCancelAction = foliaTask::cancel;
+        } else {
+            BukkitRunnable runnable = new BukkitRunnable() {
+                @Override
+                public void run() {
+                    tick(titleFirstRun, messageFirstRun, discordFirstRun,
+                         titleSeconds, messageSeconds, discordSeconds);
                 }
+            };
+            taskCancelAction = runnable.runTaskTimer(plugin, 0L, 1L)::cancel;
+        }
+    }
 
-                if (timeLeft != lastTimeLeft || firstRun) {
-                    // Title notification
-                    if ((firstRun && titleFirstRun) || titleSeconds.contains((int) timeLeft)) {
-                        Bukkit.getOnlinePlayers().forEach(player -> {
-                            player.sendTitle(message.getTitle(), message.getSubtitle(timeLeft), 10, 70, 20);
+    private void tick(boolean titleFirstRun, boolean messageFirstRun, boolean discordFirstRun,
+                      List<Integer> titleSeconds, List<Integer> messageSeconds,
+                      List<Integer> discordSeconds) {
+        long timeLeft = getTimeLeft();
+
+        if (config.getBossbarEnabled()) {
+            bossbarManager.updateBossbar();
+            bossbarManager.showBossbar();
+        }
+
+        if (timeLeft != tickLastTimeLeft || tickFirstRun) {
+            // Title notification
+            if ((tickFirstRun && titleFirstRun) || titleSeconds.contains((int) timeLeft)) {
+                final long t = timeLeft;
+                for (final Player player : Bukkit.getOnlinePlayers()) {
+                    runForPlayer(player, new Runnable() {
+                        @Override
+                        public void run() {
+                            player.sendTitle(message.getTitle(), message.getSubtitle(t), 10, 70, 20);
                             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
-                        });
-                    }
-                    // Chat message notification
-                    if ((firstRun && messageFirstRun) || messageSeconds.contains((int) timeLeft)) {
-                        List<String> notifyMsg = message.getMessage(timeLeft);
-                        Bukkit.getOnlinePlayers().forEach(player -> notifyMsg.forEach(player::sendMessage));
-                        notifyMsg.forEach(line -> plugin.getLogger().info("[StopTimer] " + colorToAnsi(line)));
-                    }
-                    // Discord notification
-                    if ((firstRun && discordFirstRun) || discordSeconds.contains((int) timeLeft)) {
-                        try {
-                            DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordMessage(timeLeft)).queue();
-                        } catch (Exception ex) {
-                            plugin.getLogger().warning("Failed to send Discord message: " + ex.getMessage());
                         }
-                    }
-                    firstRun = false;
-                    lastTimeLeft = timeLeft;
-                }
-
-                if (timeLeft <= 0) {
-                    Bukkit.getOnlinePlayers().forEach(player -> player.kickPlayer(message.getKickMessage()));
-                    cancel();
-                    durationSeconds = -1;
-                    endTimeMillis = -1;
-                    if (config.getBossbarEnabled()) {
-                        bossbarManager.hideBossbar();
-                        bossbarManager.removeBossbar();
-                    }
-                    Bukkit.shutdown();
+                    });
                 }
             }
-        };
+            // Chat message notification
+            if ((tickFirstRun && messageFirstRun) || messageSeconds.contains((int) timeLeft)) {
+                final List<String> notifyMsg = message.getMessage(timeLeft);
+                for (final Player player : Bukkit.getOnlinePlayers()) {
+                    runForPlayer(player, new Runnable() {
+                        @Override
+                        public void run() {
+                            for (String line : notifyMsg) {
+                                player.sendMessage(line);
+                            }
+                        }
+                    });
+                }
+                for (String line : notifyMsg) {
+                    plugin.getLogger().info("[StopTimer] " + colorToAnsi(line));
+                }
+            }
+            // Discord notification
+            if ((tickFirstRun && discordFirstRun) || discordSeconds.contains((int) timeLeft)) {
+                try {
+                    DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordMessage(timeLeft)).queue();
+                } catch (Exception ex) {
+                    plugin.getLogger().warning("Failed to send Discord message: " + ex.getMessage());
+                }
+            }
+            tickFirstRun = false;
+            tickLastTimeLeft = timeLeft;
+        }
 
-        task.runTaskTimer(plugin, 0, 1);
+        if (timeLeft <= 0) {
+            final String kickMsg = message.getKickMessage();
+            for (final Player player : Bukkit.getOnlinePlayers()) {
+                runForPlayer(player, new Runnable() {
+                    @Override
+                    public void run() {
+                        player.kickPlayer(kickMsg);
+                    }
+                });
+            }
+            stopTask();
+            durationSeconds = -1;
+            endTimeMillis = -1;
+            if (config.getBossbarEnabled()) {
+                bossbarManager.hideBossbar();
+                bossbarManager.removeBossbar();
+            }
+            Bukkit.shutdown();
+        }
+    }
+
+    private void stopTask() {
+        if (taskCancelAction != null) {
+            taskCancelAction.run();
+            taskCancelAction = null;
+        }
+    }
+
+    /**
+     * Runs an action for a player on the correct thread.
+     * On Folia the action is dispatched to the player's entity scheduler;
+     * on standard Bukkit/Spigot/Paper it runs directly.
+     */
+    private void runForPlayer(final Player player, final Runnable action) {
+        if (FOLIA) {
+            player.getScheduler().run(plugin, t -> action.run(), null);
+        } else {
+            action.run();
+        }
     }
 
     public boolean cancelCountdown() {
-        if (getTimeLeft() <= 0 || task == null) return false;
-        task.cancel();
+        if (getTimeLeft() <= 0 || taskCancelAction == null) return false;
+        stopTask();
         if (config.getBossbarEnabled()) {
             bossbarManager.hideBossbar();
             bossbarManager.removeBossbar();
         }
         durationSeconds = -1;
         endTimeMillis = -1;
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            message.getNotifyCancel().forEach(player::sendMessage);
-        });
+        for (final Player player : Bukkit.getOnlinePlayers()) {
+            runForPlayer(player, new Runnable() {
+                @Override
+                public void run() {
+                    for (String line : message.getNotifyCancel()) {
+                        player.sendMessage(line);
+                    }
+                }
+            });
+        }
         try {
             DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordCancel()).queue();
         } catch (Exception ignored) {}
