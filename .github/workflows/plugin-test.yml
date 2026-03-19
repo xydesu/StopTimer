@@ -65,6 +65,12 @@ jobs:
             minecraft: 1.16.5
           - server-type: folia
             minecraft: 1.18.2
+          # 1.21.11 has a known Paper bug where console commands piped during startup
+          # throw a NullPointerException (PaperMC/Paper#13580)
+          - server-type: paper
+            minecraft: 1.21.11
+          - server-type: folia
+            minecraft: 1.21.11
 
     steps:
       - name: Set up JDK ${{ matrix.java }}
@@ -84,6 +90,28 @@ jobs:
           # StopTimer hard-depends on PlaceholderAPI; download it so the server can load the plugin
           curl -fsSL "https://github.com/PlaceholderAPI/PlaceholderAPI/releases/download/2.12.2/PlaceholderAPI-2.12.2.jar" \
             -o server/plugins/PlaceholderAPI.jar
+
+      - name: Configure StopTimer for CI
+        run: |
+          # Pre-create the StopTimer config with Discord notifications disabled.
+          # Without DiscordSRV installed, the plugin throws NoClassDefFoundError (not caught
+          # by catch(Exception)) when it tries to send a Discord message on the first tick.
+          mkdir -p server/plugins/StopTimer
+          cat > server/plugins/StopTimer/config.yml << 'EOF'
+          language: en
+          DefaultTime: 5s
+          BossBar: false
+          NotifyTime:
+            Title:
+              FirstRun: false
+              Seconds: []
+            Message:
+              FirstRun: false
+              Seconds: []
+            Discord:
+              FirstRun: false
+              Seconds: []
+          EOF
 
       - name: Download Server Core
         id: download-server
