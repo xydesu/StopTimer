@@ -112,8 +112,8 @@ jobs:
         run: |
           cd server
 
-          # Run the plugins command then stop so the plugin list is captured in the log
-          printf "plugins\nstop\n" | java -jar server.jar nogui
+          # Run the plugins command then use the StopTimer command to shut down the server
+          printf "plugins\nstopserver 5s\n" | java -jar server.jar nogui
 
           # Check the latest log for fatal error log levels or uncaught exceptions
           if grep -qE "\[(ERROR|SEVERE)\]" logs/latest.log; then
