@@ -30,9 +30,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: plugin-jar
-          path: target/*.jar
-          # Exclude the original (non-shaded) jar if shade plugin produces both
-          exclude-hidden-files: false
+          # Exclude the original (non-shaded) jar produced by maven-shade-plugin
+          path: |
+            target/*.jar
+            !target/original-*.jar
 
   test:
     name: ${{ matrix.server-type }} ${{ matrix.minecraft }} (Java ${{ matrix.java }})
@@ -78,21 +79,36 @@ jobs:
           name: plugin-jar
           path: server/plugins/
 
+      - name: Download PlaceholderAPI
+        run: |
+          # StopTimer hard-depends on PlaceholderAPI; download it so the server can load the plugin
+          curl -fsSL "https://github.com/PlaceholderAPI/PlaceholderAPI/releases/download/2.11.6/PlaceholderAPI-2.11.6.jar" \
+            -o server/plugins/PlaceholderAPI.jar
+
       - name: Download Server Core
+        id: download-server
         run: |
           mkdir -p server
           cd server
 
           # Fetch the latest build number for this server type and Minecraft version
-          BUILD=$(curl -s "https://api.papermc.io/v2/projects/${{ matrix.server-type }}/versions/${{ matrix.minecraft }}" | jq -r '.builds[-1]')
+          BUILD=$(curl -fs "https://api.papermc.io/v2/projects/${{ matrix.server-type }}/versions/${{ matrix.minecraft }}" | jq -r '.builds[-1]')
 
-          # Download the server JAR
-          curl -sOJ "https://api.papermc.io/v2/projects/${{ matrix.server-type }}/versions/${{ matrix.minecraft }}/builds/${BUILD}/downloads/${{ matrix.server-type }}-${{ matrix.minecraft }}-${BUILD}.jar"
+          if [ -z "$BUILD" ] || [ "$BUILD" = "null" ]; then
+            echo "No builds found for ${{ matrix.server-type }} ${{ matrix.minecraft }}, skipping test."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-          mv *.jar server.jar
+          # Download the server JAR with an explicit output name to avoid filename ambiguity
+          curl -fsSL "https://api.papermc.io/v2/projects/${{ matrix.server-type }}/versions/${{ matrix.minecraft }}/builds/${BUILD}/downloads/${{ matrix.server-type }}-${{ matrix.minecraft }}-${BUILD}.jar" \
+            -o server.jar
+
           echo "eula=true" > eula.txt
+          echo "skip=false" >> "$GITHUB_OUTPUT"
 
       - name: Run Server & Verify Logs
+        if: steps.download-server.outputs.skip != 'true'
         run: |
           cd server
 
