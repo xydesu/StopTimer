@@ -1,0 +1,53 @@
+# StopTimer - 繁體中文語言檔案
+
+# 格式化倒數時間時使用的時間單位
+time:
+  hour: "小時"
+  hours: "小時"
+  minute: "分鐘"
+  minutes: "分鐘"
+  second: "秒"
+  seconds: "秒"
+
+messages:
+  command:
+    # 指令使用說明
+    usage: "&c使用方式: /stopserver <時間> or /stopserver cancel"
+    # 沒有權限時顯示
+    nopermission: "&c你沒有權限使用這個指令."
+    # 錯誤時間格式
+    errorformat: "&c未知的時間格式! 使用：s,m,h."
+    # 倒數已取消
+    canceled: "&a倒數已取消."
+    # 沒有倒數時取消
+    cancelfail: "&c沒有正在運行的倒數計時."
+    # 設定重新載入
+    reload: "&aStopTimer 設定已重新載入!"
+  notify:
+    # 標題通知
+    title: "&c&l重啟通知"
+    # 子標題通知，%time% 會被替換成時間
+    subtitle: "&4伺服器將在 &c%time% &4後重啟"
+    # 聊天訊息通知，%time% 會被替換成時間
+    message:
+      - "&c&l重啟通知"
+      - "&4伺服器將在 &c%time% &4後重啟"
+    # 斷線訊息
+    kick: "&c伺服器正在重啟，請稍後再試"
+    # 倒數取消時廣播的聊天訊息
+    cancel:
+      - "&c&l重啟通知"
+      - "&4伺服器重啟已取消"
+  bossbar:
+    # BossBar 顯示內容，%time% 會被替換成時間
+    message: "&4&l伺服器將在 &c&l%time% &4&l後重啟"
+  placeholder:
+    # PlaceholderAPI %stoptimer_message% 的值，%time% 會被替換成時間
+    message: "&4&l伺服器將在 &c&l%time% &4&l後重啟"
+  discord:
+    # Discord 通知訊息，%time% 會被替換成時間
+    # 注意：此處不支援 Minecraft 顏色碼（&c、&l 等），請改用 Discord Markdown 格式
+    message: "## :warning: 伺服器將在 %time% 後重啟"
+    # 倒數取消時的 Discord 通知訊息
+    # 注意：此處不支援 Minecraft 顏色碼（&c、&l 等），請改用 Discord Markdown 格式
+    cancel: "## :warning: 伺服器重啟已取消"

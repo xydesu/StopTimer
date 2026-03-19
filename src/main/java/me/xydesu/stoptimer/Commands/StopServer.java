@@ -8,6 +8,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -36,10 +37,10 @@ public class StopServer implements CommandExecutor, TabCompleter {
 
         // Reload config
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
-            Main.getInstance().reloadConfig();
-            messages.reload(Main.getInstance().getConfig());
+            FileConfiguration langConfig = Main.getInstance().reloadLangConfig();
+            messages.reload(langConfig);
             configManager.reload(Main.getInstance().getConfig());
-            sender.sendMessage(messages.getReload() != null ? messages.getReload() : "Reloaded, but no message found");
+            sender.sendMessage(messages.getReload());
             return true;
         }
 
@@ -73,7 +74,6 @@ public class StopServer implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
-        // Inside onTabComplete
         if (args.length == 1) {
             List<String> suggestions = new ArrayList<>();
             String input = args[0].toLowerCase();

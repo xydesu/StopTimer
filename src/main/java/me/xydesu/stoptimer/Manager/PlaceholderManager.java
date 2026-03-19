@@ -5,16 +5,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import static me.xydesu.stoptimer.Utils.TimeUtil.formatTime;
-
 public class PlaceholderManager extends PlaceholderExpansion {
 
     private final Manager manager;
     private final MessageManager message;
 
-    public PlaceholderManager(Plugin plugin, Manager manager) {
+    public PlaceholderManager(Plugin plugin, Manager manager, MessageManager messageManager) {
         this.manager = manager;
-        this.message = new MessageManager(plugin.getConfig());
+        this.message = messageManager;
     }
 
     @Override
@@ -42,7 +40,7 @@ public class PlaceholderManager extends PlaceholderExpansion {
         long timeLeft = manager.getTimeLeft();
 
         if (identifier.equalsIgnoreCase("time")) {
-            return (timeLeft > 0) ? formatTime(timeLeft+1) : "";
+            return (timeLeft > 0) ? message.formatTime(timeLeft + 1) : "";
         }
 
         if (identifier.equalsIgnoreCase("time_raw")) {
@@ -51,7 +49,7 @@ public class PlaceholderManager extends PlaceholderExpansion {
 
         if (identifier.equalsIgnoreCase("message")) {
             return (timeLeft > 0)
-                    ? message.getPlaceholder(timeLeft+1)
+                    ? message.getPlaceholder(timeLeft + 1)
                     : "";
         }
         return null;

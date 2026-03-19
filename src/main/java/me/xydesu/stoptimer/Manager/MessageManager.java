@@ -5,98 +5,109 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.List;
 
-import static me.xydesu.stoptimer.Utils.TimeUtil.formatTime;
+import me.xydesu.stoptimer.Utils.TimeUtil;
 
 public class MessageManager {
 
-    private FileConfiguration config;
+    private FileConfiguration langConfig;
 
-    public MessageManager(FileConfiguration config) {
-        this.config = config;
+    public MessageManager(FileConfiguration langConfig) {
+        this.langConfig = langConfig;
     }
 
-    public void reload(FileConfiguration newConfig) {
-        this.config = newConfig;
+    public void reload(FileConfiguration newLangConfig) {
+        this.langConfig = newLangConfig;
     }
 
-    public String getReload(){
-        return color(config.getString("messages.command.reload"));
+    // Format a duration using the language-configured unit labels (with singular/plural)
+    public String formatTime(long seconds) {
+        String hourSingular = langConfig.getString("time.hour", "hour");
+        String hourPlural = langConfig.getString("time.hours", "hours");
+        String minuteSingular = langConfig.getString("time.minute", "minute");
+        String minutePlural = langConfig.getString("time.minutes", "minutes");
+        String secondSingular = langConfig.getString("time.second", "second");
+        String secondPlural = langConfig.getString("time.seconds", "seconds");
+        return TimeUtil.formatTime(seconds, hourSingular, hourPlural, minuteSingular, minutePlural, secondSingular, secondPlural);
+    }
+
+    public String getReload() {
+        return color(langConfig.getString("messages.command.reload", "&aStopTimer reloaded!"));
     }
 
     // Command messages
     public String getCommandUsage() {
-        return color(config.getString("messages.command.usage"));
+        return color(langConfig.getString("messages.command.usage", "&cUsage: /stopserver <time>"));
     }
 
     public String getNoPermission() {
-        return color(config.getString("messages.command.nopermission"));
+        return color(langConfig.getString("messages.command.nopermission", "&cNo permission."));
     }
 
     public String getErrorFormat() {
-        return color(config.getString("messages.command.errorformat"));
+        return color(langConfig.getString("messages.command.errorformat", "&cInvalid time format."));
     }
 
     public String getCanceled() {
-        return color(config.getString("messages.command.canceled"));
+        return color(langConfig.getString("messages.command.canceled", "&aCountdown cancelled."));
     }
 
     public String getCancelFail() {
-        return color(config.getString("messages.command.cancelfail"));
+        return color(langConfig.getString("messages.command.cancelfail", "&cNo countdown running."));
     }
 
     // Notify messages
     public String getTitle() {
-        return color(config.getString("messages.notify.title"));
+        return color(langConfig.getString("messages.notify.title", ""));
     }
 
     public String getSubtitle(long time) {
         String t = formatTime(time);
-        return color(config.getString("messages.notify.subtitle").replace("%time%", t));
+        return color(langConfig.getString("messages.notify.subtitle", "").replace("%time%", t));
     }
-
 
     public String getPlaceholder(long time) {
         String t = formatTime(time);
-        return color(config.getString("messages.placeholder.message").replace("%time%", t));
+        return color(langConfig.getString("messages.placeholder.message", "").replace("%time%", t));
     }
 
     public String getDiscordMessage(long time) {
         String t = formatTime(time);
-        return color(config.getString("messages.discord.message").replace("%time%", t));
+        // Discord messages are sent as plain text/Markdown; Minecraft color codes are not applied.
+        return langConfig.getString("messages.discord.message", "").replace("%time%", t);
     }
 
     public String getDiscordCancel() {
-        return color(config.getString("messages.discord.cancel"));
+        // Discord messages are sent as plain text/Markdown; Minecraft color codes are not applied.
+        return langConfig.getString("messages.discord.cancel", "");
     }
 
-    public String getBossbarMessage(long time){
+    public String getBossbarMessage(long time) {
         String t = formatTime(time);
-        return color(config.getString("messages.bossbar.message").replace("%time%", t));
+        return color(langConfig.getString("messages.bossbar.message", "").replace("%time%", t));
     }
-
-
 
     public List<String> getMessage(long time) {
         String t = formatTime(time);
-        List<String> lines = config.getStringList("messages.notify.message");
+        List<String> lines = langConfig.getStringList("messages.notify.message");
         return lines.stream()
                 .map(line -> color(line.replace("%time%", t)))
                 .toList();
     }
 
     public List<String> getNotifyCancel() {
-        List<String> lines = config.getStringList("messages.notify.cancel");
+        List<String> lines = langConfig.getStringList("messages.notify.cancel");
         return lines.stream()
                 .map(this::color)
                 .toList();
     }
 
     public String getKickMessage() {
-        return color(config.getString("messages.notify.kick"));
+        return color(langConfig.getString("messages.notify.kick", ""));
     }
 
     // Utility
     private String color(String msg) {
+        if (msg == null) return "";
         return ChatColor.translateAlternateColorCodes('&', msg);
     }
 }

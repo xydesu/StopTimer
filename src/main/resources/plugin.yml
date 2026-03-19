@@ -3,7 +3,8 @@ version: ${project.version}
 main: me.xydesu.stoptimer.Main
 api-version: '1.21'
 authors: [xydesu]
-depend: [PlaceholderAPI, DiscordSRV]
+depend: [PlaceholderAPI]
+softdepend: [DiscordSRV]
 commands:
   stopserver:
     description: Stops the server and displays the time taken to stop.

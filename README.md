@@ -1,87 +1,104 @@
 # StopTimer
 
-一個支援 Spigot / Paper 的伺服器自動關機倒數插件，支援自訂訊息、Discord 通知、PlaceholderAPI 擴充。
+A Spigot / Paper plugin for scheduled server shutdown with a countdown timer. Supports custom messages, Discord notifications, PlaceholderAPI integration, and full multi-language support.
 
-## 功能特色
+## Features
 
-- 透過 `/stopserver <時間>` 指令啟動自動關機倒數（支援 s/m/h 單位，如 `30s`, `5m`, `1h`）
-- 倒數期間廣播自訂訊息、標題、副標題與 BossBar 進度條
-- 支援倒數取消 `/stopserver cancel`
-- 支援即時重新載入設定 `/stopserver reload`
-- 支援 DiscordSRV 插件，將倒數通知同步發送至 Discord 頻道
-- 支援 PlaceholderAPI，可在其他插件顯示剩餘倒數時間
-- 允許自訂所有訊息內容
-- BossBar 倒數顯示，可自訂進度條內容
-- 可自定義每個倒數階段的提示（標題、聊天、Discord）
+- Start an auto-shutdown countdown with `/stopserver <time>` (supports s/m/h units, e.g. `30s`, `5m`, `1h`)
+- Broadcast custom messages, titles, subtitles, and a BossBar progress bar during the countdown
+- Cancel the countdown with `/stopserver cancel`
+- Reload configuration live with `/stopserver reload`
+- DiscordSRV integration (optional) — syncs countdown notifications to a Discord channel
+- PlaceholderAPI support — display the remaining countdown time in other plugins
+- Fully customisable messages via language files
+- BossBar countdown display with configurable text
+- Configurable per-stage notifications (title, chat, Discord) at any remaining-time threshold
+- Multi-language support — ships with English (`en`) and Traditional Chinese (`zh_tw`)
 
-## 指令說明
+## Commands
 
-| 指令                    | 權限                          | 說明                 |
-|-------------------------|-------------------------------|----------------------|
-| `/stopserver <時間>`    | `stoptimer.stopserver` 或 OP  | 啟動自動關機倒數      |
-| `/stopserver cancel`    | `stoptimer.stopserver` 或 OP  | 取消倒數             |
-| `/stopserver reload`    | `stoptimer.stopserver` 或 OP  | 重新載入設定檔       |
+| Command                 | Permission                    | Description                  |
+|-------------------------|-------------------------------|------------------------------|
+| `/stopserver <time>`    | `stoptimer.stopserver` or OP  | Start the shutdown countdown |
+| `/stopserver cancel`    | `stoptimer.stopserver` or OP  | Cancel the countdown         |
+| `/stopserver reload`    | `stoptimer.stopserver` or OP  | Reload configuration         |
 
-**範例：**
-- `/stopserver 5m` —— 伺服器將於五分鐘後關閉
-- `/stopserver 30s` —— 伺服器將於三十秒後關閉
-- `/stopserver cancel` —— 取消倒數
+**Examples:**
+- `/stopserver 5m` — server shuts down in five minutes
+- `/stopserver 30s` — server shuts down in thirty seconds
+- `/stopserver cancel` — cancel the countdown
 
-## 權限節點
+## Permissions
 
-- `stoptimer.stopserver`：允許使用所有 /stopserver 指令
-- OP 也自動擁有權限
+- `stoptimer.stopserver` — allows use of all `/stopserver` subcommands
+- OP players have access automatically
 
-## 訊息自訂
+## Language / Localisation
 
-請於 `config.yml` 內的 `messages` 區塊自訂所有顯示文字  
-支援變數 `%time%` 顯示剩餘時間。
+Set the language in `config.yml`:
 
-## BossBar 支援
+```yaml
+language: en   # en (English) or zh_tw (Traditional Chinese)
+```
 
-- 啟用 BossBar 功能後，倒數期間將顯示進度條
-- 可於 `config.yml` 中調整 BossBar 顯示內容
-- 進度條會根據剩餘時間自動減少
+Language files are stored under `plugins/StopTimer/lang/`. To create a custom language:
 
-## PlaceholderAPI 支援
+1. Copy `plugins/StopTimer/lang/en.yml` to `plugins/StopTimer/lang/<code>.yml`
+2. Translate all message values
+3. Set `language: <code>` in `config.yml`
+4. Run `/stopserver reload`
 
-- `%stoptimer_time%`：剩餘倒數時間（如 4分鐘 20秒）
-- `%stoptimer_time_raw%`：剩餘倒數時間（純秒數，數字格式）
-- `%stoptimer_message%`：自訂訊息格式剩餘時間
+## Message Customisation
 
-## DiscordSRV 支援
+Edit `plugins/StopTimer/lang/<language>.yml` to customise all displayed text.
+Use `%time%` as a placeholder for the remaining time.
 
-- 啟用 DiscordSRV 後，倒數訊息自動同步到 Discord 頻道
-- 支援倒數通知與取消通知
+## BossBar Support
 
-## 安裝方式
+- Enable or disable the BossBar in `config.yml` with `BossBar: true/false`
+- The bar text is set in the language file under `messages.bossbar.message`
+- Progress decreases automatically as the countdown runs
 
-1. 將 StopTimer.jar 放入伺服器 `/plugins` 資料夾
-2. 重新啟動伺服器
-3. 編輯 `/plugins/StopTimer/config.yml` 以自訂訊息
-4. （可選）安裝 [PlaceholderAPI](https://www.spigotmc.org/resources/6245/) 及 [DiscordSRV](https://www.spigotmc.org/resources/18494/)
+## PlaceholderAPI Support
 
-## 常見問題
+- `%stoptimer_time%` — formatted time remaining (e.g. `4 minute 20 second`)
+- `%stoptimer_time_raw%` — seconds remaining as a plain number
+- `%stoptimer_message%` — fully formatted message with remaining time
 
-- 倒數指令無反應？
-    - 請確認權限與指令拼寫正確
-    - 檢查有無安裝相關依賴（如 DiscordSRV, PlaceholderAPI）
+## DiscordSRV Support
 
-- 如何自訂倒數訊息？
-    - 編輯 `config.yml` 內 messages 區塊，並重新載入 `/stopserver reload`
+- When DiscordSRV is installed, countdown and cancellation messages are sent automatically to the configured Discord channel
+- DiscordSRV is an **optional** dependency; the plugin works without it
 
-- BossBar 沒有顯示？
-    - 請確認 `config.yml` 中 `BossBar` 設為 `true`
+## Installation
 
-## 授權
+1. Place `StopTimer.jar` in the server's `/plugins` folder
+2. Restart the server
+3. Edit `/plugins/StopTimer/config.yml` to select a language and configure notifications
+4. Edit `/plugins/StopTimer/lang/en.yml` (or your chosen language file) to customise messages
+5. (Optional) Install [PlaceholderAPI](https://www.spigotmc.org/resources/6245/) and/or [DiscordSRV](https://www.spigotmc.org/resources/18494/)
 
-本專案採用 MIT 授權，詳情請見 [LICENSE](LICENSE)。
+## FAQ
 
-## 原始碼
+- **The countdown command does nothing?**
+    - Verify you have the correct permission or are an OP
+    - Check that required dependencies (PlaceholderAPI) are installed
+
+- **How do I customise messages?**
+    - Edit the language file at `plugins/StopTimer/lang/<language>.yml` and run `/stopserver reload`
+
+- **BossBar not showing?**
+    - Ensure `BossBar: true` is set in `config.yml`
+
+## License
+
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+
+## Source Code
 
 GitHub: [https://github.com/xydesu/StopTimer](https://github.com/xydesu/StopTimer)
 
-如有建議或問題歡迎開 Issue 或 PR！
+Issues and pull requests are welcome!
 
 ---
-作者：xydesu
+Author: xydesu

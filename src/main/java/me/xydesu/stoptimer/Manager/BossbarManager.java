@@ -4,17 +4,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BossBar;
-import org.bukkit.plugin.Plugin;
 
 public class BossbarManager {
 
     private BossBar bossbar;
     private final MessageManager message;
-    private Manager manager;
+    private final Manager manager;
 
-    public BossbarManager(Plugin plugin, Manager Manager) {
-        this.message = new MessageManager(plugin.getConfig());
-        this.manager = Manager;
+    public BossbarManager(MessageManager messageManager, Manager manager) {
+        this.message = messageManager;
+        this.manager = manager;
     }
 
     //create a bossbar when the countdown starts
