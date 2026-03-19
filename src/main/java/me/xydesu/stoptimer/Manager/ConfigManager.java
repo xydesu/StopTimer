@@ -47,4 +47,9 @@ public class ConfigManager {
         return config.getBoolean("BossBar");
     }
 
+    // DefaultTime: time string used when /stopserver is run with no argument
+    public String getDefaultTime() {
+        return config.getString("DefaultTime", "5m");
+    }
+
 }

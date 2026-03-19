@@ -12,7 +12,7 @@ time:
 messages:
   command:
     # 指令使用說明
-    usage: "&c使用方式: /stopserver <時間> or /stopserver cancel"
+    usage: "&c使用方式: /stopserver [時間] or /stopserver cancel"
     # 沒有權限時顯示
     nopermission: "&c你沒有權限使用這個指令."
     # 錯誤時間格式

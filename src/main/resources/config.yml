@@ -5,6 +5,11 @@
 # To add a custom language, create plugins/StopTimer/lang/<language>.yml
 language: en
 
+# Default shutdown countdown time used when /stopserver is run with no time argument.
+# Supports the same format as the command: s (seconds), m (minutes), h (hours).
+# Example: 5m, 30s, 1h
+DefaultTime: 5m
+
 # Enable the BossBar countdown display
 BossBar: true
 
