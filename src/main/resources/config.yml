@@ -1,52 +1,18 @@
-# StopTimer 插件設定檔
+# StopTimer configuration
 
-# 是否啟用BOSSBAR功能
+# Language to use for all messages.
+# Built-in options: en (English), zh_tw (Traditional Chinese)
+# To add a custom language, create plugins/StopTimer/lang/<language>.yml
+language: en
+
+# Enable the BossBar countdown display
 BossBar: true
-
-messages:
-  command:
-    # 指令使用說明
-    usage: "&c使用方式: /stopserver <時間> or /stopserver cancel"
-    # 沒有權限時顯示
-    nopermission: "&c你沒有權限使用這個指令."
-    # 錯誤時間格式
-    errorformat: "&c未知的時間格式! 使用：s,m,h."
-    # 倒數已取消
-    canceled: "&a倒數已取消."
-    # 沒有倒數時取消
-    cancelfail: "&c沒有正在運行的倒數計時."
-    # 設定重新載入
-    reload: "&aStopTimer 設定已重新載入!"
-  notify:
-    # 標題通知
-    title: "&c&l重啟通知"
-    # 子標題通知，%time% 會被替換成時間
-    subtitle: "&4伺服器將在 &c%time% &4後重啟"
-    message:
-      - "&c&l重啟通知"
-      - "&4伺服器將在 &c%time% &4後重啟"
-    # 斷線訊息
-    kick: "&c伺服器正在重啟，請稍後再試"
-    cancel:
-      - "&c&l重啟通知"
-      - "&4伺服器重啟已取消"
-  bossbar:
-    # bossbar顯示內容
-    message: "&4&l伺服器將在 &c&l%time% &4&l後重啟"
-  placeholder:
-    # PlaceholderAPI 提示訊息
-    message: "&4&l伺服器將在 &c&l%time% &4&l後重啟"
-  discord:
-    # Discord通知
-    message: "## :warning: 伺服器將在 %time% 後重啟"
-    # Discord取消通知
-    cancel: "## :warning: 伺服器重啟已取消"
 
 NotifyTime:
   Title:
-    # 是否一開始就發送 Title 通知
+    # Send Title notification immediately when countdown starts
     FirstRun: false
-    # 幾秒時發送 Title 通知
+    # Seconds remaining at which to send Title notifications
     Seconds:
       - 300
       - 60
@@ -57,9 +23,9 @@ NotifyTime:
       - 2
       - 1
   Message:
-    # 是否一開始就發送聊天訊息
+    # Send chat message notification immediately when countdown starts
     FirstRun: true
-    # 幾秒時發送聊天訊息
+    # Seconds remaining at which to send chat message notifications
     Seconds:
       - 1800
       - 600
@@ -72,9 +38,9 @@ NotifyTime:
       - 2
       - 1
   Discord:
-    # 是否一開始就發送 Discord 通知
+    # Send Discord notification immediately when countdown starts
     FirstRun: true
-    # 幾秒時發送 Discord 通知
+    # Seconds remaining at which to send Discord notifications
     Seconds:
       - 1800
       - 600

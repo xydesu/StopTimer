@@ -1,0 +1,53 @@
+# StopTimer - English language file
+
+# Time unit labels used when formatting countdown durations
+time:
+  hour: "hour"
+  hours: "hours"
+  minute: "minute"
+  minutes: "minutes"
+  second: "second"
+  seconds: "seconds"
+
+messages:
+  command:
+    # Usage hint shown when the command is used incorrectly
+    usage: "&cUsage: /stopserver <time> or /stopserver cancel"
+    # Shown when the player lacks permission
+    nopermission: "&cYou do not have permission to use this command."
+    # Shown when an invalid time format is provided
+    errorformat: "&cUnknown time format! Use: s, m, h."
+    # Shown when the countdown is successfully cancelled
+    canceled: "&aCountdown has been cancelled."
+    # Shown when cancel is used but no countdown is running
+    cancelfail: "&cNo countdown is currently running."
+    # Shown after a successful config reload
+    reload: "&aStopTimer configuration reloaded!"
+  notify:
+    # Title shown on players' screens during notifications
+    title: "&c&lRestart Notice"
+    # Subtitle shown on players' screens; %time% is replaced with remaining time
+    subtitle: "&4The server will restart in &c%time%"
+    # Chat messages broadcast to all players; %time% is replaced with remaining time
+    message:
+      - "&c&lRestart Notice"
+      - "&4The server will restart in &c%time%"
+    # Kick message shown when the server shuts down
+    kick: "&cServer is restarting, please try again later."
+    # Chat messages broadcast when the countdown is cancelled
+    cancel:
+      - "&c&lRestart Notice"
+      - "&4Server restart has been cancelled."
+  bossbar:
+    # BossBar title; %time% is replaced with remaining time
+    message: "&4&lServer restarting in &c&l%time%"
+  placeholder:
+    # PlaceholderAPI %stoptimer_message% value; %time% is replaced with remaining time
+    message: "&4&lServer restarting in &c&l%time%"
+  discord:
+    # Discord notification message; %time% is replaced with remaining time.
+    # Note: Minecraft color codes (&c, &l, etc.) are NOT supported here — use Discord Markdown instead.
+    message: "## :warning: Server will restart in %time%"
+    # Discord message sent when the countdown is cancelled.
+    # Note: Minecraft color codes (&c, &l, etc.) are NOT supported here — use Discord Markdown instead.
+    cancel: "## :warning: Server restart has been cancelled."

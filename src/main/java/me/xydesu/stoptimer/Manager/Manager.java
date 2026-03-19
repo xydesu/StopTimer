@@ -17,13 +17,13 @@ public class Manager {
     private long endTimeMillis = -1;
     private long durationSeconds = -1;
     private final MessageManager message;
-    private BossbarManager bossbarManager;
+    private final BossbarManager bossbarManager;
     private final ConfigManager config;
 
     public Manager(Main plugin, MessageManager messageManager, ConfigManager config) {
         this.plugin = plugin;
         this.message = messageManager;
-        this.bossbarManager = new BossbarManager(plugin, this);
+        this.bossbarManager = new BossbarManager(messageManager, this);
         this.config = config;
     }
 
@@ -81,17 +81,15 @@ public class Manager {
 
     public void startCountdown(long seconds) {
         if (getTimeLeft() > 0) {
-            // 倒數已在進行
             return;
         }
         durationSeconds = seconds;
         endTimeMillis = System.currentTimeMillis() + seconds * 1000;
 
-        if(config.getBossbarEnabled()) {
+        if (config.getBossbarEnabled()) {
             bossbarManager.createBossbar();
         }
 
-        // 取得 config 設定
         boolean titleFirstRun = config.getTitleFirstRun();
         boolean messageFirstRun = config.getMessageFirstRun();
         boolean discordFirstRun = config.getDiscordFirstRun();
@@ -112,30 +110,26 @@ public class Manager {
                     bossbarManager.showBossbar();
                 }
 
-                // 只在剩餘秒數變化時進行顯示與推播
                 if (timeLeft != lastTimeLeft || firstRun) {
-                    if (timeLeft <= 5 || timeLeft == 10 || timeLeft == 60 || timeLeft == 300 || timeLeft == 1800 || timeLeft == 600 || firstRun) {
-                        // Title 通知
-                        if ((firstRun && titleFirstRun) || titleSeconds.contains((int) timeLeft)) {
-                            Bukkit.getOnlinePlayers().forEach(player -> {
-                                player.sendTitle(message.getTitle(), message.getSubtitle(timeLeft), 10, 70, 20);
-                                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
-                            });
-                        }
-                        // Message 通知
-                        if ((firstRun && messageFirstRun) || messageSeconds.contains((int) timeLeft)) {
-                            List<String> notifyMsg = message.getMessage(timeLeft);
-                            Bukkit.getOnlinePlayers().forEach(player -> notifyMsg.forEach(player::sendMessage));
-                            // 同步印到 console
-                            notifyMsg.forEach(line -> plugin.getLogger().info("[StopTimer] " + colorToAnsi(line)));
-                        }
-                        // Discord 通知
-                        if ((firstRun && discordFirstRun) || discordSeconds.contains((int) timeLeft)) {
-                            try {
-                                DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordMessage(timeLeft)).queue();
-                            } catch (Exception ex) {
-                                plugin.getLogger().warning("無法發送 Discord 訊息：" + ex.getMessage());
-                            }
+                    // Title notification
+                    if ((firstRun && titleFirstRun) || titleSeconds.contains((int) timeLeft)) {
+                        Bukkit.getOnlinePlayers().forEach(player -> {
+                            player.sendTitle(message.getTitle(), message.getSubtitle(timeLeft), 10, 70, 20);
+                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
+                        });
+                    }
+                    // Chat message notification
+                    if ((firstRun && messageFirstRun) || messageSeconds.contains((int) timeLeft)) {
+                        List<String> notifyMsg = message.getMessage(timeLeft);
+                        Bukkit.getOnlinePlayers().forEach(player -> notifyMsg.forEach(player::sendMessage));
+                        notifyMsg.forEach(line -> plugin.getLogger().info("[StopTimer] " + colorToAnsi(line)));
+                    }
+                    // Discord notification
+                    if ((firstRun && discordFirstRun) || discordSeconds.contains((int) timeLeft)) {
+                        try {
+                            DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordMessage(timeLeft)).queue();
+                        } catch (Exception ex) {
+                            plugin.getLogger().warning("Failed to send Discord message: " + ex.getMessage());
                         }
                     }
                     firstRun = false;
@@ -147,7 +141,7 @@ public class Manager {
                     cancel();
                     durationSeconds = -1;
                     endTimeMillis = -1;
-                    if(config.getBossbarEnabled()) {
+                    if (config.getBossbarEnabled()) {
                         bossbarManager.hideBossbar();
                         bossbarManager.removeBossbar();
                     }
@@ -175,6 +169,11 @@ public class Manager {
             DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordCancel()).queue();
         } catch (Exception ignored) {}
         return true;
+    }
+
+    public void shutdown() {
+        cancelCountdown();
+        bossbarManager.removeBossbar();
     }
 
 }
