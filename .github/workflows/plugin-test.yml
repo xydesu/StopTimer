@@ -82,7 +82,7 @@ jobs:
       - name: Download PlaceholderAPI
         run: |
           # StopTimer hard-depends on PlaceholderAPI; download it so the server can load the plugin
-          curl -fsSL "https://github.com/PlaceholderAPI/PlaceholderAPI/releases/download/2.11.6/PlaceholderAPI-2.11.6.jar" \
+          curl -fsSL "https://github.com/PlaceholderAPI/PlaceholderAPI/releases/download/2.12.2/PlaceholderAPI-2.12.2.jar" \
             -o server/plugins/PlaceholderAPI.jar
 
       - name: Download Server Core
