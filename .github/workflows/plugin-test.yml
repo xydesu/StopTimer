@@ -112,8 +112,8 @@ jobs:
         run: |
           cd server
 
-          # Start the server and inject the stop command via pipe so it shuts down after loading
-          echo "stop" | java -jar server.jar nogui
+          # Run the plugins command then stop so the plugin list is captured in the log
+          printf "plugins\nstop\n" | java -jar server.jar nogui
 
           # Check the latest log for fatal error log levels or uncaught exceptions
           if grep -qE "\[(ERROR|SEVERE)\]" logs/latest.log; then
@@ -124,6 +124,13 @@ jobs:
             echo "❌ Test failed: Uncaught exception stack trace found in logs!"
             grep -iE "^(Exception in thread|Caused by:)" logs/latest.log
             exit 1
+          fi
+
+          # Verify StopTimer is listed as an enabled plugin
+          if grep -qiE "Plugins \([0-9]+\):.*StopTimer" logs/latest.log; then
+            echo "✅ StopTimer is loaded and enabled!"
           else
-            echo "✅ Server started successfully, plugin loaded with no fatal errors!"
+            echo "❌ Test failed: StopTimer not found in the plugins list!"
+            grep -iE "Plugins \(" logs/latest.log || true
+            exit 1
           fi
