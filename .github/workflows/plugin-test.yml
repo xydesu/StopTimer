@@ -154,11 +154,15 @@ jobs:
             exit 1
           fi
 
-          # Verify StopTimer is listed as an enabled plugin
-          if grep -qiE "Plugins \([0-9]+\):.*StopTimer" logs/latest.log; then
+          # Verify StopTimer enabled successfully.
+          # Older Paper (≤1.18) prints "Plugins (N): A, B" on one line; newer Paper/Folia (1.20+)
+          # prints a multi-line block, so we can't rely on StopTimer appearing on the same line
+          # as "Plugins (N):".  The Bukkit lifecycle message "[StopTimer] Enabling StopTimer"
+          # is emitted by every version and is the most reliable signal.
+          if grep -qiE "\[StopTimer\] Enabling StopTimer" logs/latest.log; then
             echo "✅ StopTimer is loaded and enabled!"
           else
-            echo "❌ Test failed: StopTimer not found in the plugins list!"
-            grep -iE "Plugins \(" logs/latest.log || true
+            echo "❌ Test failed: StopTimer did not enable successfully!"
+            grep -iE "\[StopTimer\]" logs/latest.log || true
             exit 1
           fi
