@@ -54,14 +54,17 @@ public class StopServer implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Require exactly 1 argument (time)
-        if (args.length != 1) {
+        // Use default time when no argument is provided
+        String timeArg = args.length == 0 ? configManager.getDefaultTime() : args[0];
+
+        // Require exactly 1 argument (time) if something unexpected was passed
+        if (args.length > 1) {
             sender.sendMessage(messages.getCommandUsage());
             return true;
         }
 
         // Parse time
-        long seconds = manager.parseTime(args[0]);
+        long seconds = manager.parseTime(timeArg);
         if (seconds <= 0) {
             sender.sendMessage(messages.getErrorFormat());
             return true;

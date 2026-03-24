@@ -1,0 +1,162 @@
+name: Plugin Compatibility Matrix
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Plugin JAR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build with Maven
+        run: mvn clean package -q
+
+      - name: Upload Plugin Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-jar
+          # Exclude the original (non-shaded) jar produced by maven-shade-plugin
+          path: |
+            target/*.jar
+            !target/original-*.jar
+
+  test:
+    name: ${{ matrix.server-type }} ${{ matrix.minecraft }} (Java ${{ matrix.java }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      # Continue testing other versions even if one fails
+      fail-fast: false
+      matrix:
+        server-type: [paper, folia]
+        minecraft: [1.12.2, 1.16.5, 1.18.2, 1.20.6, 1.21.10]
+        include:
+          # Bind the correct Java runtime to each Minecraft version
+          - minecraft: 1.12.2
+            java: 8
+          - minecraft: 1.16.5
+            java: 11
+          - minecraft: 1.18.2
+            java: 17
+          - minecraft: 1.20.6
+            java: 21
+          - minecraft: 1.21.10
+            java: 21
+        exclude:
+          # Folia only supports 1.19.4+, skip unsupported older versions
+          - server-type: folia
+            minecraft: 1.12.2
+          - server-type: folia
+            minecraft: 1.16.5
+          - server-type: folia
+            minecraft: 1.18.2
+
+    steps:
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+
+      - name: Download Plugin Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-jar
+          path: server/plugins/
+
+      - name: Download PlaceholderAPI
+        run: |
+          # StopTimer hard-depends on PlaceholderAPI; download it so the server can load the plugin
+          curl -fsSL "https://github.com/PlaceholderAPI/PlaceholderAPI/releases/download/2.12.2/PlaceholderAPI-2.12.2.jar" \
+            -o server/plugins/PlaceholderAPI.jar
+
+      - name: Configure StopTimer for CI
+        run: |
+          # Pre-create the StopTimer config with Discord notifications disabled.
+          # Without DiscordSRV installed, the plugin throws NoClassDefFoundError (not caught
+          # by catch(Exception)) when it tries to send a Discord message on the first tick.
+          mkdir -p server/plugins/StopTimer
+          cat > server/plugins/StopTimer/config.yml << 'EOF'
+          language: en
+          DefaultTime: 5s
+          BossBar: false
+          NotifyTime:
+            Title:
+              FirstRun: false
+              Seconds: []
+            Message:
+              FirstRun: false
+              Seconds: []
+            Discord:
+              FirstRun: false
+              Seconds: []
+          EOF
+
+      - name: Download Server Core
+        id: download-server
+        run: |
+          mkdir -p server
+          cd server
+
+          # Fetch the latest build number for this server type and Minecraft version
+          BUILD=$(curl -fs "https://api.papermc.io/v2/projects/${{ matrix.server-type }}/versions/${{ matrix.minecraft }}" | jq -r '.builds[-1]')
+
+          if [ -z "$BUILD" ] || [ "$BUILD" = "null" ]; then
+            echo "No builds found for ${{ matrix.server-type }} ${{ matrix.minecraft }}, skipping test."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Download the server JAR with an explicit output name to avoid filename ambiguity
+          curl -fsSL "https://api.papermc.io/v2/projects/${{ matrix.server-type }}/versions/${{ matrix.minecraft }}/builds/${BUILD}/downloads/${{ matrix.server-type }}-${{ matrix.minecraft }}-${BUILD}.jar" \
+            -o server.jar
+
+          echo "eula=true" > eula.txt
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Run Server & Verify Logs
+        if: steps.download-server.outputs.skip != 'true'
+        run: |
+          cd server
+
+          # Run the plugins command then use the StopTimer command to shut down the server
+          printf "plugins\nstopserver 5s\n" | java -jar server.jar nogui
+
+          # Check the latest log for fatal error log levels or uncaught exceptions
+          if grep -qE "\[(ERROR|SEVERE)\]" logs/latest.log; then
+            echo "❌ Test failed: ERROR/SEVERE found in logs!"
+            grep -E "\[(ERROR|SEVERE)\]" logs/latest.log
+            exit 1
+          elif grep -qiE "^(Exception in thread|Caused by:|\s+at .*\(.*\))" logs/latest.log; then
+            echo "❌ Test failed: Uncaught exception stack trace found in logs!"
+            grep -iE "^(Exception in thread|Caused by:)" logs/latest.log
+            exit 1
+          fi
+
+          # Verify StopTimer enabled successfully.
+          # Older Paper (≤1.18) prints "Plugins (N): A, B" on one line; newer Paper/Folia (1.20+)
+          # prints a multi-line block, so we can't rely on StopTimer appearing on the same line
+          # as "Plugins (N):".  The Bukkit lifecycle message "[StopTimer] Enabling StopTimer"
+          # is emitted by every version and is the most reliable signal.
+          if grep -qiE "\[StopTimer\] Enabling StopTimer" logs/latest.log; then
+            echo "✅ StopTimer is loaded and enabled!"
+          else
+            echo "❌ Test failed: StopTimer did not enable successfully!"
+            grep -iE "\[StopTimer\]" logs/latest.log || true
+            exit 1
+          fi

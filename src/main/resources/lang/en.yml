@@ -12,7 +12,7 @@ time:
 messages:
   command:
     # Usage hint shown when the command is used incorrectly
-    usage: "&cUsage: /stopserver <time> or /stopserver cancel"
+    usage: "&cUsage: /stopserver [time] or /stopserver cancel"
     # Shown when the player lacks permission
     nopermission: "&cYou do not have permission to use this command."
     # Shown when an invalid time format is provided
