@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch: # 允許在 GitHub 介面上手動觸發
 
 jobs:
   build:
