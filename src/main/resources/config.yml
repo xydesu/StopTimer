@@ -15,6 +15,7 @@ BossBar: true
 
 NotifyTime:
   Title:
+    Enable: true
     # Send Title notification immediately when countdown starts
     FirstRun: false
     # Seconds remaining at which to send Title notifications
@@ -28,6 +29,7 @@ NotifyTime:
       - 2
       - 1
   Message:
+    Enable: true
     # Send chat message notification immediately when countdown starts
     FirstRun: true
     # Seconds remaining at which to send chat message notifications
@@ -43,6 +45,7 @@ NotifyTime:
       - 2
       - 1
   Discord:
+    Enable: true
     # Send Discord notification immediately when countdown starts
     FirstRun: true
     # Seconds remaining at which to send Discord notifications

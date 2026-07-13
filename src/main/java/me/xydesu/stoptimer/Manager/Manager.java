@@ -109,6 +109,10 @@ public class Manager {
             bossbarManager.createBossbar();
         }
 
+        final boolean titleEnabled = config.getTitleEnabled();
+        final boolean messageEnabled = config.getMessageEnabled();
+        final boolean discordEnabled = config.getDiscordEnabled() && Bukkit.getPluginManager().getPlugin("DiscordSRV") != null;
+
         final boolean titleFirstRun = config.getTitleFirstRun();
         final boolean messageFirstRun = config.getMessageFirstRun();
         final boolean discordFirstRun = config.getDiscordFirstRun();
@@ -119,7 +123,7 @@ public class Manager {
         if (FOLIA) {
             io.papermc.paper.threadedregions.scheduler.ScheduledTask foliaTask =
                 plugin.getServer().getGlobalRegionScheduler().runAtFixedRate(plugin, t ->
-                    tick(titleFirstRun, messageFirstRun, discordFirstRun,
+                    tick(titleEnabled, messageEnabled, discordEnabled, titleFirstRun, messageFirstRun, discordFirstRun,
                          titleSeconds, messageSeconds, discordSeconds),
                     1L, 1L);
             taskCancelAction = foliaTask::cancel;
@@ -127,7 +131,7 @@ public class Manager {
             BukkitRunnable runnable = new BukkitRunnable() {
                 @Override
                 public void run() {
-                    tick(titleFirstRun, messageFirstRun, discordFirstRun,
+                    tick(titleEnabled, messageEnabled, discordEnabled, titleFirstRun, messageFirstRun, discordFirstRun,
                          titleSeconds, messageSeconds, discordSeconds);
                 }
             };
@@ -135,7 +139,8 @@ public class Manager {
         }
     }
 
-    private void tick(boolean titleFirstRun, boolean messageFirstRun, boolean discordFirstRun,
+    private void tick(boolean titleEnabled, boolean messageEnabled, boolean discordEnabled,
+                      boolean titleFirstRun, boolean messageFirstRun, boolean discordFirstRun,
                       List<Integer> titleSeconds, List<Integer> messageSeconds,
                       List<Integer> discordSeconds) {
         long timeLeft = getTimeLeft();
@@ -147,7 +152,7 @@ public class Manager {
 
         if (timeLeft != tickLastTimeLeft || tickFirstRun) {
             // Title notification
-            if ((tickFirstRun && titleFirstRun) || titleSeconds.contains((int) timeLeft)) {
+            if (titleEnabled && ((tickFirstRun && titleFirstRun) || titleSeconds.contains((int) timeLeft))) {
                 final long t = timeLeft;
                 for (final Player player : Bukkit.getOnlinePlayers()) {
                     runForPlayer(player, new Runnable() {
@@ -160,7 +165,7 @@ public class Manager {
                 }
             }
             // Chat message notification
-            if ((tickFirstRun && messageFirstRun) || messageSeconds.contains((int) timeLeft)) {
+            if (messageEnabled && ((tickFirstRun && messageFirstRun) || messageSeconds.contains((int) timeLeft))) {
                 final List<String> notifyMsg = message.getMessage(timeLeft);
                 for (final Player player : Bukkit.getOnlinePlayers()) {
                     runForPlayer(player, new Runnable() {
@@ -177,11 +182,13 @@ public class Manager {
                 }
             }
             // Discord notification
-            if ((tickFirstRun && discordFirstRun) || discordSeconds.contains((int) timeLeft)) {
+            if (discordEnabled && ((tickFirstRun && discordFirstRun) || discordSeconds.contains((int) timeLeft))) {
                 try {
                     DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordMessage(timeLeft)).queue();
                 } catch (Exception ex) {
                     plugin.getLogger().warning("Failed to send Discord message: " + ex.getMessage());
+                } catch (NoClassDefFoundError ex) {
+                    // 如果沒有 DiscordSRV 則忽略
                 }
             }
             tickFirstRun = false;
@@ -248,9 +255,12 @@ public class Manager {
                 }
             });
         }
-        try {
-            DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordCancel()).queue();
-        } catch (Exception ignored) {}
+        boolean discordEnabled = config.getDiscordEnabled() && Bukkit.getPluginManager().getPlugin("DiscordSRV") != null;
+        if (discordEnabled) {
+            try {
+                DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordCancel()).queue();
+            } catch (Exception | NoClassDefFoundError ignored) {}
+        }
         return true;
     }
 
