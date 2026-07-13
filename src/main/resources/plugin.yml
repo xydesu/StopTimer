@@ -4,8 +4,8 @@ main: me.xydesu.stoptimer.Main
 api-version: '1.13'
 folia-supported: true
 authors: [xydesu]
-depend: [PlaceholderAPI]
-softdepend: [DiscordSRV]
+depend: []
+softdepend: [DiscordSRV, PlaceholderAPI]
 commands:
   stopserver:
     description: Stops the server and displays the time taken to stop.

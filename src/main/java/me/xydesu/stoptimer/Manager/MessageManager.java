@@ -44,6 +44,10 @@ public class MessageManager {
         return color(langConfig.getString("messages.command.nopermission", "&cNo permission."));
     }
 
+    public String getAlreadyRunning() {
+        return color(langConfig.getString("messages.command.alreadyrunning", "&cA countdown is already running! Use /stopserver cancel first."));
+    }
+
     public String getErrorFormat() {
         return color(langConfig.getString("messages.command.errorformat", "&cInvalid time format."));
     }

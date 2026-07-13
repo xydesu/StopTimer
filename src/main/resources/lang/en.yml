@@ -23,6 +23,8 @@ messages:
     cancelfail: "&cNo countdown is currently running."
     # Shown after a successful config reload
     reload: "&aStopTimer configuration reloaded!"
+    # Message sent when countdown is already running
+    alreadyrunning: "&cA countdown is already running! Use /stopserver cancel first."
   notify:
     # Title shown on players' screens during notifications
     title: "&c&lRestart Notice"

@@ -34,7 +34,9 @@ public final class Main extends JavaPlugin {
         getCommand("stopserver").setExecutor(stopServerCommand);
         getCommand("stopserver").setTabCompleter(stopServerCommand);
 
-        new PlaceholderManager(this, manager, messageManager).register();
+        if (org.bukkit.Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new PlaceholderManager(this, manager, messageManager).register();
+        }
     }
 
     @Override

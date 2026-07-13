@@ -40,16 +40,16 @@ public class PlaceholderManager extends PlaceholderExpansion {
         long timeLeft = manager.getTimeLeft();
 
         if (identifier.equalsIgnoreCase("time")) {
-            return (timeLeft > 0) ? message.formatTime(timeLeft + 1) : "";
+            return (timeLeft > 0) ? message.formatTime(timeLeft) : "";
         }
 
         if (identifier.equalsIgnoreCase("time_raw")) {
-            return (timeLeft > 0) ? String.valueOf(timeLeft + 1) : "";
+            return (timeLeft > 0) ? String.valueOf(timeLeft) : "";
         }
 
         if (identifier.equalsIgnoreCase("message")) {
             return (timeLeft > 0)
-                    ? message.getPlaceholder(timeLeft + 1)
+                    ? message.getPlaceholder(timeLeft)
                     : "";
         }
         return null;

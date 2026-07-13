@@ -11,7 +11,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 
-public class Manager {
+public class Manager implements org.bukkit.event.Listener {
 
     /** True when the server is running Folia (thread-per-region scheduler). */
     private static final boolean FOLIA;
@@ -42,6 +42,7 @@ public class Manager {
         this.message = messageManager;
         this.bossbarManager = new BossbarManager(messageManager, this);
         this.config = config;
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     public long getTimeLeft() {
@@ -58,12 +59,16 @@ public class Manager {
         try {
             char unit = input.charAt(input.length() - 1);
             long value = Long.parseLong(input.substring(0, input.length() - 1));
+            if (value <= 0) return -1;
+            long seconds = -1;
             switch (unit) {
-                case 's': return value;
-                case 'm': return value * 60;
-                case 'h': return value * 3600;
+                case 's': seconds = value; break;
+                case 'm': seconds = Math.multiplyExact(value, 60); break;
+                case 'h': seconds = Math.multiplyExact(value, 3600); break;
                 default: return -1;
             }
+            if (seconds > 2592000) return -1; // Max 30 days
+            return seconds;
         } catch (Exception e) {
             return -1;
         }
@@ -107,6 +112,7 @@ public class Manager {
 
         if (config.getBossbarEnabled()) {
             bossbarManager.createBossbar();
+            bossbarManager.addAllPlayers();
         }
 
         final boolean titleEnabled = config.getTitleEnabled();
@@ -145,12 +151,10 @@ public class Manager {
                       List<Integer> discordSeconds) {
         long timeLeft = getTimeLeft();
 
-        if (config.getBossbarEnabled()) {
-            bossbarManager.updateBossbar();
-            bossbarManager.showBossbar();
-        }
-
         if (timeLeft != tickLastTimeLeft || tickFirstRun) {
+            if (config.getBossbarEnabled()) {
+                bossbarManager.updateBossbar();
+            }
             // Title notification
             if (titleEnabled && ((tickFirstRun && titleFirstRun) || titleSeconds.contains((int) timeLeft))) {
                 final long t = timeLeft;
@@ -269,4 +273,10 @@ public class Manager {
         bossbarManager.removeBossbar();
     }
 
+    @org.bukkit.event.EventHandler
+    public void onPlayerJoin(org.bukkit.event.player.PlayerJoinEvent event) {
+        if (getTimeLeft() > 0 && config.getBossbarEnabled()) {
+            bossbarManager.addPlayer(event.getPlayer());
+        }
+    }
 }

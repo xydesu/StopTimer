@@ -23,6 +23,8 @@ messages:
     cancelfail: "&c沒有正在運行的倒數計時."
     # 設定重新載入
     reload: "&aStopTimer 設定已重新載入!"
+    # 已在倒數中的錯誤提示
+    alreadyrunning: "&c伺服器已經在倒數中！請先使用 /stopserver cancel 取消。"
   notify:
     # 標題通知
     title: "&c&l重啟通知"

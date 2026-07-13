@@ -71,6 +71,10 @@ public class StopServer implements CommandExecutor, TabCompleter {
         }
 
         // Start countdown
+        if (manager.getTimeLeft() > 0) {
+            sender.sendMessage(messages.getAlreadyRunning());
+            return true;
+        }
         manager.startCountdown(seconds);
         return true;
     }

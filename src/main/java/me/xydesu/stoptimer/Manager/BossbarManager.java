@@ -34,8 +34,14 @@ public class BossbarManager {
         bossbar.setProgress(progress);
     }
 
-    public void showBossbar() {
+    public void addAllPlayers() {
         Bukkit.getOnlinePlayers().forEach(bossbar::addPlayer);
+    }
+
+    public void addPlayer(org.bukkit.entity.Player player) {
+        if (bossbar != null) {
+            bossbar.addPlayer(player);
+        }
     }
 
     public void hideBossbar() {
