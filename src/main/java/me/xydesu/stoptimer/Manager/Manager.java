@@ -241,6 +241,10 @@ public class Manager implements org.bukkit.event.Listener {
     }
 
     public boolean cancelCountdown() {
+        return cancelCountdown(true);
+    }
+
+    public boolean cancelCountdown(boolean notify) {
         if (getTimeLeft() <= 0 || taskCancelAction == null) return false;
         stopTask();
         if (config.getBossbarEnabled()) {
@@ -249,27 +253,29 @@ public class Manager implements org.bukkit.event.Listener {
         }
         durationSeconds = -1;
         endTimeMillis = -1;
-        for (final Player player : Bukkit.getOnlinePlayers()) {
-            runForPlayer(player, new Runnable() {
-                @Override
-                public void run() {
-                    for (String line : message.getNotifyCancel()) {
-                        player.sendMessage(line);
+        if (notify) {
+            for (final Player player : Bukkit.getOnlinePlayers()) {
+                runForPlayer(player, new Runnable() {
+                    @Override
+                    public void run() {
+                        for (String line : message.getNotifyCancel()) {
+                            player.sendMessage(line);
+                        }
                     }
-                }
-            });
-        }
-        boolean discordEnabled = config.getDiscordEnabled() && Bukkit.getPluginManager().getPlugin("DiscordSRV") != null;
-        if (discordEnabled) {
-            try {
-                DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordCancel()).queue();
-            } catch (Exception | NoClassDefFoundError ignored) {}
+                });
+            }
+            boolean discordEnabled = config.getDiscordEnabled() && Bukkit.getPluginManager().getPlugin("DiscordSRV") != null;
+            if (discordEnabled) {
+                try {
+                    DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordCancel()).queue();
+                } catch (Exception | NoClassDefFoundError ignored) {}
+            }
         }
         return true;
     }
 
     public void shutdown() {
-        cancelCountdown();
+        cancelCountdown(false);
         bossbarManager.removeBossbar();
     }
 
