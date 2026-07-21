@@ -4,6 +4,7 @@ import me.xydesu.stoptimer.Manager.ConfigManager;
 import me.xydesu.stoptimer.Manager.Manager;
 import me.xydesu.stoptimer.Manager.MessageManager;
 import me.xydesu.stoptimer.Manager.PlaceholderManager;
+import me.xydesu.stoptimer.Manager.TemplateManager;
 import me.xydesu.stoptimer.Commands.StopServer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -16,6 +17,7 @@ public final class Main extends JavaPlugin {
     private Manager manager;
     private MessageManager messageManager;
     private ConfigManager configManager;
+    private TemplateManager templateManager;
 
     @Override
     public void onEnable() {
@@ -28,6 +30,7 @@ public final class Main extends JavaPlugin {
 
         messageManager = new MessageManager(langConfig);
         configManager = new ConfigManager(getConfig());
+        templateManager = new TemplateManager(this);
         manager = new Manager(this, messageManager, configManager);
 
         StopServer stopServerCommand = new StopServer(manager, messageManager, configManager);
@@ -50,6 +53,9 @@ public final class Main extends JavaPlugin {
      */
     public FileConfiguration reloadLangConfig() {
         reloadConfig();
+        if (templateManager != null) {
+            templateManager.reload();
+        }
         String language = getConfig().getString("language", "en");
         saveDefaultLangIfAbsent(language);
         return loadLangConfig(language);
@@ -88,6 +94,10 @@ public final class Main extends JavaPlugin {
 
     public MessageManager getMessageManager() {
         return messageManager;
+    }
+
+    public TemplateManager getTemplateManager() {
+        return templateManager;
     }
 
     public static Main getInstance() {

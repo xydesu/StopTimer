@@ -33,6 +33,7 @@ public class Manager implements org.bukkit.event.Listener {
     private long tickLastTimeLeft;
     private long endTimeMillis = -1;
     private long durationSeconds = -1;
+    private String currentReason = null;
     private final MessageManager message;
     private final BossbarManager bossbarManager;
     private final ConfigManager config;
@@ -40,7 +41,7 @@ public class Manager implements org.bukkit.event.Listener {
     public Manager(Main plugin, MessageManager messageManager, ConfigManager config) {
         this.plugin = plugin;
         this.message = messageManager;
-        this.bossbarManager = new BossbarManager(messageManager, this);
+        this.bossbarManager = new BossbarManager(messageManager, this, config);
         this.config = config;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
@@ -49,6 +50,10 @@ public class Manager implements org.bukkit.event.Listener {
         if (endTimeMillis < 0) return -1;
         long left = (long) Math.ceil((endTimeMillis - System.currentTimeMillis()) / 1000.0);
         return Math.max(0, left);
+    }
+
+    public String getCurrentReason() {
+        return currentReason;
     }
 
     public long getTimeMax() {
@@ -101,12 +106,13 @@ public class Manager implements org.bukkit.event.Listener {
                 + "\u001B[0m";
     }
 
-    public void startCountdown(long seconds) {
+    public void startCountdown(long seconds, String reason) {
         if (getTimeLeft() > 0) {
             return;
         }
         durationSeconds = seconds;
         endTimeMillis = System.currentTimeMillis() + seconds * 1000;
+        currentReason = reason;
         tickFirstRun = true;
         tickLastTimeLeft = -1;
 
@@ -159,25 +165,19 @@ public class Manager implements org.bukkit.event.Listener {
             if (titleEnabled && ((tickFirstRun && titleFirstRun) || titleSeconds.contains((int) timeLeft))) {
                 final long t = timeLeft;
                 for (final Player player : Bukkit.getOnlinePlayers()) {
-                    runForPlayer(player, new Runnable() {
-                        @Override
-                        public void run() {
-                            player.sendTitle(message.getTitle(), message.getSubtitle(t), 10, 70, 20);
-                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
-                        }
+                    runForPlayer(player, () -> {
+                        player.sendTitle(message.getTitle(t, currentReason), message.getSubtitle(t, currentReason), 10, 70, 20);
+                        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
                     });
                 }
             }
             // Chat message notification
             if (messageEnabled && ((tickFirstRun && messageFirstRun) || messageSeconds.contains((int) timeLeft))) {
-                final List<String> notifyMsg = message.getMessage(timeLeft);
+                final List<String> notifyMsg = message.getMessage(timeLeft, currentReason);
                 for (final Player player : Bukkit.getOnlinePlayers()) {
-                    runForPlayer(player, new Runnable() {
-                        @Override
-                        public void run() {
-                            for (String line : notifyMsg) {
-                                player.sendMessage(line);
-                            }
+                    runForPlayer(player, () -> {
+                        for (String line : notifyMsg) {
+                            player.sendMessage(line);
                         }
                     });
                 }
@@ -188,7 +188,7 @@ public class Manager implements org.bukkit.event.Listener {
             // Discord notification
             if (discordEnabled && ((tickFirstRun && discordFirstRun) || discordSeconds.contains((int) timeLeft))) {
                 try {
-                    DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordMessage(timeLeft)).queue();
+                    DiscordSRV.getPlugin().getMainTextChannel().sendMessage(message.getDiscordMessage(timeLeft, currentReason)).queue();
                 } catch (Exception ex) {
                     plugin.getLogger().warning("Failed to send Discord message: " + ex.getMessage());
                 } catch (NoClassDefFoundError ex) {
@@ -200,18 +200,14 @@ public class Manager implements org.bukkit.event.Listener {
         }
 
         if (timeLeft <= 0) {
-            final String kickMsg = message.getKickMessage();
+            final String kickMsg = message.getKickMessage(currentReason);
             for (final Player player : Bukkit.getOnlinePlayers()) {
-                runForPlayer(player, new Runnable() {
-                    @Override
-                    public void run() {
-                        player.kickPlayer(kickMsg);
-                    }
-                });
+                runForPlayer(player, () -> player.kickPlayer(kickMsg));
             }
             stopTask();
             durationSeconds = -1;
             endTimeMillis = -1;
+            currentReason = null;
             if (config.getBossbarEnabled()) {
                 bossbarManager.hideBossbar();
                 bossbarManager.removeBossbar();
@@ -253,14 +249,12 @@ public class Manager implements org.bukkit.event.Listener {
         }
         durationSeconds = -1;
         endTimeMillis = -1;
+        currentReason = null;
         if (notify) {
             for (final Player player : Bukkit.getOnlinePlayers()) {
-                runForPlayer(player, new Runnable() {
-                    @Override
-                    public void run() {
-                        for (String line : message.getNotifyCancel()) {
-                            player.sendMessage(line);
-                        }
+                runForPlayer(player, () -> {
+                    for (String line : message.getNotifyCancel()) {
+                        player.sendMessage(line);
                     }
                 });
             }

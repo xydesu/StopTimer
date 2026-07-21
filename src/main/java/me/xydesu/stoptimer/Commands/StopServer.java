@@ -54,13 +54,45 @@ public class StopServer implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Use default time when no argument is provided
-        String timeArg = args.length == 0 ? configManager.getDefaultTime() : args[0];
+        String timeArg = configManager.getDefaultTime();
+        int reasonStartIndex = -1;
 
-        // Require exactly 1 argument (time) if something unexpected was passed
-        if (args.length > 1) {
-            sender.sendMessage(messages.getCommandUsage());
-            return true;
+        if (args.length > 0) {
+            if (args[0].startsWith("r:") || args[0].startsWith("t:")) {
+                reasonStartIndex = 0;
+            } else {
+                timeArg = args[0];
+                if (args.length > 1) {
+                    if (args[1].startsWith("r:") || args[1].startsWith("t:")) {
+                        reasonStartIndex = 1;
+                    } else {
+                        sender.sendMessage(messages.getCommandUsage());
+                        return true;
+                    }
+                }
+            }
+        }
+
+        String reason = null;
+        if (reasonStartIndex != -1) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = reasonStartIndex; i < args.length; i++) {
+                if (i > reasonStartIndex) sb.append(" ");
+                sb.append(args[i]);
+            }
+            String joined = sb.toString();
+            if (joined.startsWith("r:")) {
+                reason = joined.substring(2);
+            } else if (joined.startsWith("t:")) {
+                String templateName = joined.substring(2);
+                reason = Main.getInstance().getTemplateManager().getTemplate(templateName);
+                if (reason == null) {
+                    sender.sendMessage(org.bukkit.ChatColor.RED + "Template '" + templateName + "' not found.");
+                    return true;
+                }
+            }
+        } else {
+            reason = Main.getInstance().getTemplateManager().getDefaultTemplate();
         }
 
         // Parse time
@@ -75,7 +107,7 @@ public class StopServer implements CommandExecutor, TabCompleter {
             sender.sendMessage(messages.getAlreadyRunning());
             return true;
         }
-        manager.startCountdown(seconds);
+        manager.startCountdown(seconds, reason);
         return true;
     }
 
@@ -110,8 +142,30 @@ public class StopServer implements CommandExecutor, TabCompleter {
                 if (ex.startsWith(input)) suggestions.add(ex);
             }
 
+            // Suggestions for reason/template
+            addReasonTemplateSuggestions(input, suggestions);
+
+            return suggestions;
+        } else if (args.length == 2) {
+            List<String> suggestions = new ArrayList<>();
+            String input = args[1].toLowerCase();
+            addReasonTemplateSuggestions(input, suggestions);
             return suggestions;
         }
         return new ArrayList<>();
+    }
+
+    private void addReasonTemplateSuggestions(String input, List<String> suggestions) {
+        if ("r:".startsWith(input)) suggestions.add("r:");
+        if (input.startsWith("t:")) {
+            String prefix = input.substring(2);
+            for (String tmpl : Main.getInstance().getTemplateManager().getTemplateNames()) {
+                if (tmpl.toLowerCase().startsWith(prefix)) {
+                    suggestions.add("t:" + tmpl);
+                }
+            }
+        } else if ("t:".startsWith(input)) {
+            suggestions.add("t:");
+        }
     }
 }

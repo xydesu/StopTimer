@@ -56,7 +56,30 @@ public class ConfigManager {
     }
 
     public boolean getBossbarEnabled() {
-        return config.getBoolean("BossBar");
+        if (config.isBoolean("BossBar")) {
+            return config.getBoolean("BossBar");
+        }
+        return config.getBoolean("BossBar.Enable", true);
+    }
+
+    public org.bukkit.boss.BarColor getBossbarColor() {
+        if (!config.isConfigurationSection("BossBar")) return org.bukkit.boss.BarColor.RED;
+        String colorStr = config.getString("BossBar.Color", "RED");
+        try {
+            return org.bukkit.boss.BarColor.valueOf(colorStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return org.bukkit.boss.BarColor.RED;
+        }
+    }
+
+    public org.bukkit.boss.BarStyle getBossbarStyle() {
+        if (!config.isConfigurationSection("BossBar")) return org.bukkit.boss.BarStyle.SOLID;
+        String styleStr = config.getString("BossBar.Style", "SOLID");
+        try {
+            return org.bukkit.boss.BarStyle.valueOf(styleStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return org.bukkit.boss.BarStyle.SOLID;
+        }
     }
 
     // DefaultTime: time string used when /stopserver is run with no argument

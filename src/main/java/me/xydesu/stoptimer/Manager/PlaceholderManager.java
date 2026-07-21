@@ -49,8 +49,12 @@ public class PlaceholderManager extends PlaceholderExpansion {
 
         if (identifier.equalsIgnoreCase("message")) {
             return (timeLeft > 0)
-                    ? message.getPlaceholder(timeLeft)
+                    ? message.getPlaceholder(timeLeft, manager.getCurrentReason())
                     : "";
+        }
+
+        if (identifier.equalsIgnoreCase("reason")) {
+            return (manager.getCurrentReason() != null) ? manager.getCurrentReason() : "";
         }
         return null;
     }

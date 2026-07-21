@@ -28,28 +28,28 @@ messages:
   notify:
     # 標題通知
     title: "&c&l重啟通知"
-    # 子標題通知，%time% 會被替換成時間
-    subtitle: "&4伺服器將在 &c%time% &4後重啟"
-    # 聊天訊息通知，%time% 會被替換成時間
+    # 子標題通知，%time% 會被替換成時間，%reason% 會被替換為停機原因
+    subtitle: "&4伺服器將在 &c%time% &4後重啟 &8(&7%reason%&8)"
+    # 聊天訊息通知，%time% 會被替換成時間，%reason% 會被替換為停機原因
     message:
       - "&c&l重啟通知"
-      - "&4伺服器將在 &c%time% &4後重啟"
+      - "&4伺服器將在 &c%time% &4後重啟 &8(&7%reason%&8)"
     # 斷線訊息
-    kick: "&c伺服器正在重啟，請稍後再試"
+    kick: "&c伺服器正在重啟 (&7%reason%&c)，請稍後再試"
     # 倒數取消時廣播的聊天訊息
     cancel:
       - "&c&l重啟通知"
       - "&4伺服器重啟已取消"
   bossbar:
-    # BossBar 顯示內容，%time% 會被替換成時間
-    message: "&4&l伺服器將在 &c&l%time% &4&l後重啟"
+    # BossBar 顯示內容，%time% 會被替換成時間，%reason% 會被替換為停機原因
+    message: "&4&l伺服器將在 &c&l%time% &4&l後重啟 &8(&7%reason%&8)"
   placeholder:
-    # PlaceholderAPI %stoptimer_message% 的值，%time% 會被替換成時間
-    message: "&4&l伺服器將在 &c&l%time% &4&l後重啟"
+    # PlaceholderAPI %stoptimer_message% 的值，%time% 會被替換成時間，%reason% 會被替換為停機原因
+    message: "&4&l伺服器將在 &c&l%time% &4&l後重啟 &8(&7%reason%&8)"
   discord:
-    # Discord 通知訊息，%time% 會被替換成時間
+    # Discord 通知訊息，%time% 會被替換成時間，%reason% 會被替換為停機原因
     # 注意：此處不支援 Minecraft 顏色碼（&c、&l 等），請改用 Discord Markdown 格式
-    message: "## :warning: 伺服器將在 %time% 後重啟"
+    message: "## :warning: 伺服器將在 %time% 後重啟 (%reason%)"
     # 倒數取消時的 Discord 通知訊息
     # 注意：此處不支援 Minecraft 顏色碼（&c、&l 等），請改用 Discord Markdown 格式
     cancel: "## :warning: 伺服器重啟已取消"

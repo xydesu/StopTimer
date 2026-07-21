@@ -9,15 +9,17 @@ public class BossbarManager {
     private BossBar bossbar;
     private final MessageManager message;
     private final Manager manager;
+    private final ConfigManager config;
 
-    public BossbarManager(MessageManager messageManager, Manager manager) {
+    public BossbarManager(MessageManager messageManager, Manager manager, ConfigManager config) {
         this.message = messageManager;
         this.manager = manager;
+        this.config = config;
     }
 
     //create a bossbar when the countdown starts
     public void createBossbar() {
-        bossbar = Bukkit.createBossBar(message.getBossbarMessage(manager.getTimeLeft()), BarColor.RED, org.bukkit.boss.BarStyle.SOLID);
+        bossbar = Bukkit.createBossBar(message.getBossbarMessage(manager.getTimeLeft(), manager.getCurrentReason()), config.getBossbarColor(), config.getBossbarStyle());
         double progress = 1.0;
         if (manager.getTimeMax() > 0) {
             progress = Math.max(0.0, Math.min(1.0, (double) manager.getTimeLeft() / manager.getTimeMax()));
@@ -26,7 +28,7 @@ public class BossbarManager {
     }
 
     public void updateBossbar() {
-        bossbar.setTitle(message.getBossbarMessage(manager.getTimeLeft()));
+        bossbar.setTitle(message.getBossbarMessage(manager.getTimeLeft(), manager.getCurrentReason()));
         double progress = 1.0;
         if (manager.getTimeMax() > 0) {
             progress = Math.max(0.0, Math.min(1.0, (double) manager.getTimeLeft() / manager.getTimeMax()));

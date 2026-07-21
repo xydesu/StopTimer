@@ -61,24 +61,33 @@ public class MessageManager {
     }
 
     // Notify messages
-    public String getTitle() {
-        return color(langConfig.getString("messages.notify.title", ""));
-    }
-
-    public String getSubtitle(long time) {
+    public String getTitle(long time, String reason) {
         String t = formatTime(time);
-        return color(langConfig.getString("messages.notify.subtitle", "").replace("%time%", t));
+        String msg = langConfig.getString("messages.notify.title", "").replace("%time%", t);
+        if (reason != null) msg = msg.replace("%reason%", reason);
+        return color(msg);
     }
 
-    public String getPlaceholder(long time) {
+    public String getSubtitle(long time, String reason) {
         String t = formatTime(time);
-        return color(langConfig.getString("messages.placeholder.message", "").replace("%time%", t));
+        String msg = langConfig.getString("messages.notify.subtitle", "").replace("%time%", t);
+        if (reason != null) msg = msg.replace("%reason%", reason);
+        return color(msg);
     }
 
-    public String getDiscordMessage(long time) {
+    public String getPlaceholder(long time, String reason) {
+        String t = formatTime(time);
+        String msg = langConfig.getString("messages.placeholder.message", "").replace("%time%", t);
+        if (reason != null) msg = msg.replace("%reason%", reason);
+        return color(msg);
+    }
+
+    public String getDiscordMessage(long time, String reason) {
         String t = formatTime(time);
         // Discord messages are sent as plain text/Markdown; Minecraft color codes are not applied.
-        return langConfig.getString("messages.discord.message", "").replace("%time%", t);
+        String msg = langConfig.getString("messages.discord.message", "").replace("%time%", t);
+        if (reason != null) msg = msg.replace("%reason%", reason);
+        return msg;
     }
 
     public String getDiscordCancel() {
@@ -86,16 +95,22 @@ public class MessageManager {
         return langConfig.getString("messages.discord.cancel", "");
     }
 
-    public String getBossbarMessage(long time) {
+    public String getBossbarMessage(long time, String reason) {
         String t = formatTime(time);
-        return color(langConfig.getString("messages.bossbar.message", "").replace("%time%", t));
+        String msg = langConfig.getString("messages.bossbar.message", "").replace("%time%", t);
+        if (reason != null) msg = msg.replace("%reason%", reason);
+        return color(msg);
     }
 
-    public List<String> getMessage(long time) {
+    public List<String> getMessage(long time, String reason) {
         String t = formatTime(time);
         List<String> lines = langConfig.getStringList("messages.notify.message");
         return lines.stream()
-                .map(line -> color(line.replace("%time%", t)))
+                .map(line -> {
+                    String replaced = line.replace("%time%", t);
+                    if (reason != null) replaced = replaced.replace("%reason%", reason);
+                    return color(replaced);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -106,8 +121,10 @@ public class MessageManager {
                 .collect(Collectors.toList());
     }
 
-    public String getKickMessage() {
-        return color(langConfig.getString("messages.notify.kick", ""));
+    public String getKickMessage(String reason) {
+        String msg = langConfig.getString("messages.notify.kick", "");
+        if (reason != null) msg = msg.replace("%reason%", reason);
+        return color(msg);
     }
 
     // Utility
