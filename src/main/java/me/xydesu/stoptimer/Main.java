@@ -9,6 +9,7 @@ import me.xydesu.stoptimer.Commands.StopServer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bstats.bukkit.Metrics;
 
 import java.io.File;
 
@@ -40,6 +41,10 @@ public final class Main extends JavaPlugin {
         if (org.bukkit.Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new PlaceholderManager(this, manager, messageManager).register();
         }
+
+        // 初始化 bStats 統計
+        int pluginId = 33227;
+        new Metrics(this, pluginId);
     }
 
     @Override
